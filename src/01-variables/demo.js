@@ -1,5 +1,5 @@
-let nombre= "Pablo";
-var apellido= "SG";
-const dni = "000000000T";
-
-console.log= ("Hola me llamo: " +nombre+ +apellido, "y tengo " +edad+ " años")
+/*let mi_nombre:string="Pablo";
+function saludo(nombre:string) {
+  console.log("Hola " +nombre);
+}
+saludo(mi_nombre);*/
