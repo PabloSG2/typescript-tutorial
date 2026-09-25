@@ -27,5 +27,6 @@ console.log(++edad , --edad);
 
 //Interfaz del Usuario
 interface Usuario {
-  nombre:string;edad:number;dni:string;
+  nombre:string;edad:number;dni?:string;
 }
+let u1:Usuario ={nombre:"Pablo", edad:18};
