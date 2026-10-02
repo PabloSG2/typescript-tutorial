@@ -17,8 +17,7 @@ cualquierCosa=1;console.log(cualquierCosa);
 console.log(true&&false); console.log(true||true);
 
 //Operaciones aritmeticas, decremento y incremento
-console.log(10*3); console.log(9/3); console.log(10**3);
-console.log(++edad , --edad);
+console.log(10*3, 9/3, 10**3); console.log(++edad , --edad);
 
 //Interfaz del Usuario
 interface Usuario {
@@ -77,12 +76,6 @@ let array:number[]=[1,2,3,4,5,6];
 let array1:(string|number)[][]=[[1,"dos","tres",4,5], ["seis",7, "ocho"]];
 console.log(array); console.log(array1);
 
-//Copia de los nombres
-let nuevas_personas1: Usuario[] =  []
-for(const p of nuevas_personas1) {
-  nuevas_personas1.push({...p})
-} console.log(nuevas_personas);
-
 //Split, sort,push, pop, unshift, shift
 let frutas = ["pera", "naranja"]; 
 frutas.push("tomate"); //pone numero final
@@ -95,4 +88,16 @@ console.log(frutas)
 console.log(`La pera se encuentra en la posición: ${frutas.indexOf("pera")}`);
 console.log(`El tomate está en el array: ${frutas.includes("tomate")}`);
 console.log(frutas.find((valor:string)=>{return valor.length>=3}))
-frutas.forEach((valor:string)=>{console.log(valor)})
+frutas.forEach((valor:string)=>{console.log(`Fruta: ` +valor)}) 
+
+//Modifica datos
+type Persona= {nombre:string, edad: number}
+let pe1= {nombre: "Pabloo", edad: 21}
+let pe2 = {edad: 20, nombre: "Manolo"}; let arraype= [pe1,pe2]; 
+console.log(arraype); //Muestra datos sin sumar +1 en edad
+arraype.map((valor:Persona)=>{valor.edad+=1;return valor}); console.log(arraype)
+
+//Ejemplo notas aprobados
+let notas = [4,5,8,7,9,10,0,1,5];
+let aprobados = notas.filter((valor:number)=> valor>=5);
+console.log(aprobados)
