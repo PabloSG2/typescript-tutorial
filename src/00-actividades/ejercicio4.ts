@@ -10,5 +10,4 @@ console.log(`Tras 2 altas -> ${actualizada2}`)
 
 //let actualizada3 = lista('Carlos');
 //console.log(`Baja de Carlos -> ${actualizada3}`);
-
-console.log(`¿Está Marta? -> ${lista.find('Marta')}`)
+//console.log(`¿Está Marta? -> ${lista.find('Marta')}`)
