@@ -1,5 +1,3 @@
-import { copyFileSync } from "fs";
-
 type notas = {practica: number;examen:null;};
 const n:notas = {practica: 8.5,examen: null,};
 const n1:notas = {practica: 0,examen: null,};
