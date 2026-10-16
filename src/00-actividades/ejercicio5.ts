@@ -28,5 +28,5 @@ for(const n of notaaa) {
 }
 console.log("Reecuento ->",recuento)
 
-const top3 = [...notaaa].sort((a, b) => b - a).slice(0, 3);
+const top3 = [...notaaa].sort((a, b) => b - a).slice(0, 3).join(",,");
 console.log("Top 3->",top3)
