@@ -18,5 +18,8 @@ const totalPaginas = Libros.reduce((acumulado, libro) => acumulado + libro.pagin
 console.log("Total de páginas:", totalPaginas);
 
 // Buscamos si existe algún libro cuyo autor incluya 'Unamuno' o 'Lorca'
-console.log(`¿Está Unamuno? -> ${Libros.autor.includes('Unamuno')}`);
-console.log(`¿Está Marta? -> ${Libros.autor.includes('Lorca')}`);
+for (let i = 0; i < Libros.length; i++) {
+    const autor = array[i];
+}
+console.log(`¿Está Unamuno? -> ${Libros.includes('Unamuno')}`);
+console.log(`¿Está Marta? -> ${Libros.indexOf('Lorca')}`);
