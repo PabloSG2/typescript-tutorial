@@ -10,8 +10,8 @@ let Libros: Libro[] = [
 ];
 
 // Mostramos los títulos de los libros disponibles separados por |
-const librosDisponibles = Libros.filter();
-console.log("Disponibles:", librosDisponibles.join(" | "));
+/*const librosDisponibles = Libros.filter();
+console.log("Disponibles:", librosDisponibles.join(" | "));*/
 
 // Mostramos el total de páginas de todo el catálogo
 const totalPaginas = Libros.reduce((acumulado, libro) => acumulado + libro.paginas, 0);
@@ -21,5 +21,6 @@ console.log("Total de páginas:", totalPaginas);
 for (let i = 0; i < Libros.length; i++) {
     const autor = array[i];
 }
+/*
 console.log(`¿Está Unamuno? -> ${Libros.includes('Unamuno')}`);
-console.log(`¿Está Marta? -> ${Libros.indexOf('Lorca')}`);
+console.log(`¿Está Marta? -> ${Libros.indexOf('Lorca')}`); */
