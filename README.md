@@ -41,7 +41,7 @@ Material del módulo de introducción a **TypeScript**, como paso previo al desa
 
 Cada capítulo del manual tiene una carpeta en `src/` con un fichero `demo.ts` **ejecutable y comentado**. El README explica, la demo se ejecuta: van en paralelo.
 
-Entre los capítulos hay **tres bloques de ejercicios** (19 en total) que comparten un hilo conductor: la gestión académica de un ciclo formativo.
+Entre los capítulos hay **tres bloques de ejercicios** (18 en total) que comparten un hilo conductor: la gestión académica de un ciclo formativo.
 
 | # | Capítulo | Carpeta en `src/` |
 |---|---|---|
@@ -277,7 +277,7 @@ src/
   16-decoradores/
   ejercicios/
     README.md
-    soluciones/       ejercicio-01.ts ... ejercicio-19.ts
+    soluciones/       ejercicio-01.ts ... ejercicio-18.ts
 ```
 
 ## Sobre la configuración
@@ -1043,7 +1043,7 @@ Una función solo puede devolver un valor, pero si ese valor es una tupla puedes
 
 > 📁 Soluciones comentadas: [`src/ejercicios/`](src/ejercicios/README.md)
 
-Los diecinueve ejercicios del curso cuentan una misma historia: la **gestión académica de un ciclo formativo** (grupos, alumnos, notas, matrículas…). Este primer bloque corresponde a los capítulos 01 a 06.
+Los dieciocho ejercicios del curso cuentan una misma historia: la **gestión académica de un ciclo formativo** (grupos, alumnos, notas, matrículas…). Este primer bloque corresponde a los capítulos 01 a 06.
 
 ## Cómo trabajar cada ejercicio
 
@@ -1615,82 +1615,6 @@ console.log("assertion ->", comoTexto.length);
 > // console.log(roto.toFixed(2));   // Compila, pero explota en ejecución.
 > ```
 
-## Type guards personalizados
-
-Una aserción `as` obliga al compilador a callarse, pero **no comprueba nada**. Un *type guard* sí comprueba, y además le enseña a TypeScript lo que ha averiguado.
-
-La clave está en el tipo de retorno: en lugar de `boolean`, se escribe `dato is Alumno`.
-
-```ts
-type Alumno = { nombre: string; curso: string };
-
-function esAlumno(dato: unknown): dato is Alumno {
-  return (
-    typeof dato === "object" &&
-    dato !== null &&
-    "nombre" in dato &&
-    "curso" in dato &&
-    typeof dato.nombre === "string" &&
-    typeof dato.curso === "string"
-  );
-}
-```
-
-Cada línea del `return` va estrechando el tipo para la siguiente: tras `typeof dato === "object"` y `dato !== null`, TypeScript ya permite usar `in`; y tras `"nombre" in dato`, permite leer `dato.nombre`. Por eso no hace falta ninguna aserción `as` dentro del propio guard.
-
-A partir de ahí, dentro del `if` TypeScript trata el valor como un `Alumno`: autocompleta sus propiedades y detecta errores.
-
-```ts
-// Simula algo que llega de fuera (una API, un JSON, un formulario)
-const deLaApi: unknown = { nombre: "Ana", curso: "DAM" };
-const basura: unknown = { titulo: "no soy un alumno" };
-
-// Dentro del if, TypeScript ya trata `deLaApi` como Alumno: autocompleta y valida
-if (esAlumno(deLaApi)) {
-  console.log(`type guard -> ${deLaApi.nombre} estudia ${deLaApi.curso}`);
-}
-
-console.log("¿basura es Alumno? ->", esAlumno(basura)); // false
-```
-
-Esta es la forma correcta de tratar datos que vienen de fuera: una API, un `JSON.parse` o un formulario. Con `as Alumno` le prometes al compilador algo que no has verificado; con `esAlumno()` lo compruebas de verdad.
-
-## Narrowing con `in` y con `instanceof`
-
-Además de `typeof`, hay otras dos formas de estrechar un tipo.
-
-`in` comprueba si una propiedad existe:
-
-```ts
-type Perro = { ladrar: () => void };
-type Gato = { maullar: () => void };
-
-function hacerSonido(animal: Perro | Gato): void {
-  // `in` comprueba si la propiedad existe y estrecha el tipo
-  if ("ladrar" in animal) {
-    animal.ladrar();
-  } else {
-    animal.maullar();
-  }
-}
-```
-
-`instanceof` distingue entre clases:
-
-```ts
-// `instanceof` estrecha entre clases
-function formatear(valor: Date | string): string {
-  return valor instanceof Date ? valor.toISOString().slice(0, 10) : valor;
-}
-```
-
-| Técnica | Sirve para |
-|---|---|
-| `typeof x === "string"` | Tipos primitivos |
-| `"prop" in objeto` | Distinguir objetos por sus propiedades |
-| `x instanceof Clase` | Distinguir clases (y el `catch` de errores) |
-| `function f(x): x is T` | Cualquier comprobación propia, por compleja que sea |
-
 ## Objetos anidados y desestructuración
 
 ```ts
@@ -1860,29 +1784,9 @@ if (estadoSeguro === "en-progreso") {
 
 Añadir estados nuevos no afecta a los existentes, y si renombras uno, TypeScript te obliga a actualizar todos los sitios donde se usaba.
 
-## Objeto `as const`: lo mejor de los dos
-
-Si necesitas recorrer los valores pero no quieres el peso ni los riesgos del `enum`:
-
-```ts
-const Prioridad = {
-  Baja: "BAJA",
-  Media: "MEDIA",
-  Alta: "ALTA",
-} as const;
-
-type Prioridad = (typeof Prioridad)[keyof typeof Prioridad]; // "BAJA" | "MEDIA" | "ALTA"
-
-const p: Prioridad = Prioridad.Alta;
-console.log("as const ->", p, "| valores:", Object.values(Prioridad));
-```
-
-`as const` congela el objeto y hace que TypeScript infiera los tipos literales exactos en lugar de `string`. Obtienes autocompletado, recorrido con `Object.values()` y tipado estricto.
-
 > **Cuándo usar cada uno**
 > - **Unión de literales**: por defecto. Es lo más común en proyectos Angular.
-> - **`as const`**: cuando además necesites recorrer los valores.
-> - **`enum`**: solo si necesitas el mapeo inverso o lo exige una librería.
+> - **`enum`**: solo si necesitas recorrer los valores, el mapeo inverso o lo exige una librería.
 
 ---
 
@@ -1980,41 +1884,6 @@ const calc: Calculadora = {
 
 Fíjate en que al implementarla **no hace falta repetir los tipos**: TypeScript los deduce del contrato.
 
-## Call signature
-
-Una interfaz puede describir **una función que además tiene propiedades**:
-
-```ts
-interface Saludo {
-  (nombre: string): string; // firma de llamada
-  idioma: string; // ...y además tiene propiedades
-}
-
-const saludar = ((nombre: string) => `Hola ${nombre}`) as Saludo;
-saludar.idioma = "es";
-console.log("Call signature ->", saludar("Jose"), `(${saludar.idioma})`);
-```
-
-La línea sin nombre `(nombre: string): string` es la firma de llamada: dice cómo se invoca el propio objeto.
-
-## Index signature
-
-Para objetos con claves dinámicas que no conoces de antemano:
-
-```ts
-interface Diccionario {
-  [clave: string]: string;
-}
-
-const traducciones: Diccionario = { hola: "hello", adios: "goodbye" };
-// Con "noPropertyAccessFromIndexSignature" (activo aquí y en Angular)
-// hay que acceder con corchetes, no con punto:
-console.log("Index signature ->", traducciones["hola"]);
-// console.log(traducciones.hola);   // Error: Property 'hola' comes from an index signature.
-```
-
-Esa regla obliga a distinguir visualmente entre una propiedad que **existe seguro** (acceso con punto) y una que puede no existir (acceso con corchetes).
-
 ## `type` frente a `interface`
 
 ```ts
@@ -2050,27 +1919,57 @@ A diferencia de las interfaces, las clases **sí generan código JavaScript**: e
 
 ```ts
 class Coche {
-  marca: string;
-  modelo: string;
+  marca: string; // se asigna en el constructor
+  modelo: string; // se asigna en el constructor
+  kilometros: number = 0; // valor inicial en la declaración
+  matricula?: string; // opcional: puede quedarse sin valor
 
   constructor(marca: string, modelo: string) {
     this.marca = marca;
     this.modelo = modelo;
   }
 
+  conducir(km: number): void {
+    this.kilometros += km;
+  }
+
   describir(): string {
-    return `${this.marca} ${this.modelo}`;
+    return `${this.marca} ${this.modelo}, ${this.kilometros} km, matrícula ${this.matricula ?? "pendiente"}`;
   }
 }
 
 const coche = new Coche("Seat", "Ibiza");
+coche.conducir(120);
+coche.conducir(35);
+console.log(coche.describir()); // Seat Ibiza, 155 km, matrícula pendiente
+
+coche.matricula = "1234ABC";
+console.log(coche.describir()); // Seat Ibiza, 155 km, matrícula 1234ABC
 ```
 
-El **constructor** es un método especial que se ejecuta al hacer `new` y sirve para inicializar las propiedades.
+El **constructor** es un método especial que se ejecuta al hacer `new` y sirve para inicializar las propiedades. Los **métodos**, como `conducir` y `describir`, leen y modifican las propiedades del propio objeto a través de `this`.
 
-> ⚠️ Con `strict` activado, **toda propiedad debe tener un valor**: o se inicializa
-> en la declaración (`puntuacion: number = 0`) o se asigna en el constructor. Si no,
-> el compilador da el error *"Property 'x' has no initializer"*.
+### Toda propiedad necesita un valor
+
+Con `strict` activado, cada propiedad debe tener un valor desde el momento en que se hace `new`. La clase `Coche` usa las tres formas de conseguirlo:
+
+| Propiedad | Cómo obtiene su valor | Cuándo usar esta forma |
+|---|---|---|
+| `marca`, `modelo` | Se asignan en el constructor | El valor llega desde fuera, al hacer `new` |
+| `kilometros` | Tiene un valor inicial en la declaración (`= 0`) | Todos los objetos empiezan con el mismo valor |
+| `matricula` | Es opcional (`?`) | Es normal que no tenga valor. Al usarla hay que contemplar el `undefined`, aquí con `??` |
+
+Si quitas el `= 0` de `kilometros`, el compilador da este error:
+
+```
+error TS2564: Property 'kilometros' has no initializer and is not definitely assigned in the constructor.
+```
+
+El error tiene sentido. Sin ese valor inicial, `kilometros` empezaría siendo `undefined`, `conducir(120)` calcularía `undefined + 120` y `describir()` mostraría `Seat Ibiza, NaN km`.
+
+> ⚠️ La asignación solo cuenta si está **en el propio constructor** y se hace **siempre**.
+> Asignar la propiedad desde otro método al que llama el constructor, o solo dentro de un `if`,
+> da el mismo error.
 
 ## Atajo del constructor
 
@@ -2109,6 +2008,12 @@ class CuentaBancaria {
   public titular: string; // accesible desde cualquier sitio (por defecto)
   protected saldo: number; // accesible en la clase y en sus hijas
   private pin: string; // accesible SOLO dentro de esta clase
+
+  constructor(titular: string, saldoInicial: number, pin: string) {
+    this.titular = titular;
+    this.saldo = saldoInicial;
+    this.pin = pin;
+  }
 
   ingresar(cantidad: number): void {
     if (cantidad <= 0) throw new Error("La cantidad debe ser positiva");
@@ -2283,16 +2188,123 @@ Es el punto intermedio entre una interfaz (solo el contrato) y una clase normal 
 
 ## Polimorfismo
 
-*Poli* = muchas, *morfos* = formas. Consiste en tratar objetos de clases distintas a través de un mismo tipo base:
+*Poli* = muchas, *morfos* = formas. Una misma llamada, como `f.area()`, hace cosas distintas según el objeto que haya detrás. Para que funcione, todos los objetos tienen que compartir un tipo: una clase base o una interfaz.
+
+### Con una clase base
+
+Añadimos una segunda figura a la de la sección anterior:
 
 ```ts
+class Rectangulo extends Figura {
+  constructor(
+    private base: number,
+    private altura: number,
+  ) {
+    super("Rectángulo");
+  }
+  override area(): number {
+    return this.base * this.altura;
+  }
+}
+
 const figuras: Figura[] = [new Circulo(3), new Rectangulo(4, 5)];
-figuras.forEach((f) => console.log("polimorfismo ->", f.describir()));
+figuras.forEach((f) => console.log(f.describir()));
+// Círculo tiene un área de 28.27
+// Rectángulo tiene un área de 20.00
 ```
 
-El array es de tipo `Figura[]`, pero cada elemento ejecuta **su propia** versión de `area()`. El código que recorre el array no necesita saber qué figura es cada una: solo que todas saben calcular su área.
+El array es de tipo `Figura[]`, pero cada elemento ejecuta **su propia** versión de `area()`.
 
-Este es el mecanismo que permite a Angular tratar de forma uniforme componentes distintos.
+La clase base no tiene por qué ser abstracta. Con `Vehiculo` y `Electrico`, de la sección de herencia, pasa lo mismo:
+
+```ts
+const flota: Vehiculo[] = [new Vehiculo("Seat"), new Electrico("Tesla", 500)];
+flota.forEach((v) => console.log(v.arrancar()));
+// Seat arrancando
+// Tesla arrancando en silencio (500 km)
+```
+
+`Electrico` sobrescribe `arrancar()` con `override`, así que se ejecuta su versión aunque el array sea de tipo `Vehiculo[]`.
+
+### Con interfaces
+
+Las clases ni siquiera necesitan un padre común: basta con que cumplan la misma interfaz. `Ticket` no tiene nada que ver con `Factura`, pero las dos son `Imprimible`:
+
+```ts
+class Ticket implements Imprimible {
+  constructor(
+    private caja: number,
+    private total: number,
+  ) {}
+
+  imprimir(): void {
+    console.log(`Ticket de la caja ${this.caja}: ${this.total.toFixed(2)} €`);
+  }
+}
+
+const documentos: Imprimible[] = [new Factura("F-2025-001", 121), new Ticket(2, 8.5)];
+documentos.forEach((d) => d.imprimir());
+// Factura F-2025-001: 121 €
+// Ticket de la caja 2: 8.50 €
+```
+
+### Para qué sirve
+
+El código que trabaja con el tipo base no necesita saber qué clases existen. Esta función suma el área de cualquier lista de figuras:
+
+```ts
+function areaTotal(lista: Figura[]): number {
+  return lista.reduce((acc, f) => acc + f.area(), 0);
+}
+```
+
+Si más adelante se añade una figura nueva, `areaTotal` sigue funcionando sin cambiar ni una línea:
+
+```ts
+class Triangulo extends Figura {
+  constructor(
+    private base: number,
+    private altura: number,
+  ) {
+    super("Triángulo");
+  }
+  override area(): number {
+    return (this.base * this.altura) / 2;
+  }
+}
+
+figuras.push(new Triangulo(6, 2));
+console.log(`Área total: ${areaTotal(figuras).toFixed(2)}`); // Área total: 54.27
+```
+
+### Lo que se pierde: lo propio de cada clase
+
+A través del tipo base solo se ve lo que declara el tipo base. `Figura` no tiene `radio`, así que esto no compila aunque el primer elemento sea un círculo:
+
+```ts
+// figuras[0].radio;   // Error: Property 'radio' does not exist on type 'Figura'.
+```
+
+Cuando necesites saber de qué clase es cada objeto, usa `instanceof`. Comprueba si un objeto se creó con una clase concreta o con una de sus hijas:
+
+```ts
+const circulos = figuras.filter((f) => f instanceof Circulo).length;
+console.log(`Círculos: ${circulos} de ${figuras.length}`); // Círculos: 1 de 3
+```
+
+Si te encuentras llenando el código de `instanceof`, suele ser señal de que ese comportamiento debería ser un método del tipo base.
+
+### En Angular
+
+Angular llama a `ngOnInit()` en cada componente al crearlo, sin saber de qué clase es cada uno: le basta con que tenga ese método. La interfaz `OnInit` es el contrato que te obliga a escribirlo con el nombre y la forma correctos:
+
+```ts
+export class ListaAlumnosComponent implements OnInit {
+  ngOnInit(): void {
+    // cargar los datos al crear el componente
+  }
+}
+```
 
 ---
 
@@ -2419,62 +2431,19 @@ Códigos válidos -> [ 'DAM1', 'DAM2', 'DAW1', 'ASIR2' ]
 
 ---
 
-### Ejercicio 10 — Validar lo que llega de fuera
-*Capítulo 08* · **Practicarás:** comprobar datos de tipo `unknown` con *type guards* y distinguir tipos con `in`.
+### Ejercicio 10 — Estados de la matrícula
+*Capítulo 09* · **Practicarás:** `enum` y uniones de literales, y por qué conviene evitar los `enum` numéricos.
 
-Los datos que llegan de una API no son de fiar: les pueden faltar campos o traerlos con el tipo equivocado. Por eso se reciben como `unknown` y hay que comprobarlos antes de usarlos.
-
-Parte de estas tres respuestas simuladas, guardadas en un array de tipo `unknown[]`:
-
-```ts
-{ expediente: 1001, nombre: "Ana Serrano", ciclo: "DAM" }   // correcta
-{ expediente: "1002", nombre: "Luis Gil", ciclo: "DAW" }    // el expediente es un texto
-{ nombre: "Marta Ruiz", ciclo: "MECATRONICA" }              // sin expediente y con un ciclo que no existe
-```
-
-**Pasos**
-
-1. Escribe `esCiclo(valor)`, que diga si un valor es `"DAM"`, `"DAW"` o `"ASIR"`. Su tipo de retorno debe ser `valor is Ciclo`.
-2. Escribe `esAlumno(dato)`, con tipo de retorno `dato is Alumno`. Debe comprobar **de verdad** que el dato es un objeto, que no es `null`, que tiene las tres propiedades y que cada una es del tipo correcto. Para el ciclo, usa `esCiclo`.
-3. Recorre las respuestas: guarda las válidas en un array y muestra las descartadas. Termina indicando cuántas se han importado.
-4. Define dos tipos: `Matriculado` (nombre y expediente) y `Preinscrito` (nombre y fecha de solicitud). Escribe una función que acepte cualquiera de los dos y muestre un mensaje distinto según cuál sea.
-
-> 💡 **Pistas**
-> - Un *type guard* es una función que devuelve `true` o `false`, pero cuyo tipo de retorno es `dato is Alumno`. Cuando devuelve `true`, dentro del `if` TypeScript ya trata el dato como un `Alumno` y te deja usar sus propiedades.
-> - No uses `dato as Alumno`: eso solo silencia al compilador, no comprueba nada.
-> - Para distinguir los dos tipos del paso 4: `if ("expediente" in persona)`.
-> - Para mostrar un objeto descartado como texto: `JSON.stringify(dato)`.
-
-**Salida esperada**
-
-```
-✅ Válido: Ana Serrano (DAM)
-❌ Descartado: {"expediente":"1002","nombre":"Luis Gil","ciclo":"DAW"}
-❌ Descartado: {"nombre":"Marta Ruiz","ciclo":"MECATRONICA"}
-Importados 1 de 3
-Ana: matriculado, expediente 1001
-Sofía: preinscrito el 2025-06-20
-```
-
----
-
-### Ejercicio 11 — Estados de la matrícula
-*Capítulo 09* · **Practicarás:** `enum`, uniones de literales y objetos `as const`, y por qué conviene evitar los `enum` numéricos.
-
-Una matrícula puede estar preinscrita, confirmada o anulada. Vas a representar esos tres estados de tres formas distintas para compararlas.
+Una matrícula puede estar preinscrita, confirmada o anulada. Vas a representar esos tres estados de dos formas distintas para compararlas.
 
 **Pasos**
 
 1. **Con un `enum` de textos.** Crea `EstadoMatricula` con los valores `"PREINSCRITA"`, `"CONFIRMADA"` y `"ANULADA"`. Escribe una función con `switch` que devuelva un mensaje para cada estado (por ejemplo, `"Matrícula en vigor"` para la confirmada) y pruébala. Muestra también todos sus valores con `Object.values()`.
 2. **Con una unión de literales.** Define `type Estado = "PREINSCRITA" | "CONFIRMADA" | "ANULADA"`, crea una variable de ese tipo y muéstrala.
-3. **Con un objeto `as const`.** Crea un objeto `ESTADOS` con los tres valores, termínalo con `as const` y obtén de él un tipo. Muestra uno de sus valores y todos con `Object.values()`.
-4. **El peligro del `enum` numérico.** Crea un `enum` con Preinscrita, Confirmada y Anulada **sin darles valor**: TypeScript los numera solo como 0, 1 y 2. Guarda el número `1`, como si viniera de una base de datos, y muestra a qué estado corresponde. Crea después una segunda versión del `enum` con un estado nuevo, `Borrador`, **al principio**, y comprueba a qué estado corresponde ahora ese mismo `1`. ¿Te avisa el compilador?
-5. Con la lista `["CONFIRMADA", "PREINSCRITA", "CONFIRMADA", "ANULADA", "CONFIRMADA"]`, cuenta cuántas matrículas hay de cada estado. Guarda el recuento en un `Record<Estado, number>`.
+3. **El peligro del `enum` numérico.** Crea un `enum` con Preinscrita, Confirmada y Anulada **sin darles valor**: TypeScript los numera solo como 0, 1 y 2. Guarda el número `1`, como si viniera de una base de datos, y muestra a qué estado corresponde. Crea después una segunda versión del `enum` con un estado nuevo, `Borrador`, **al principio**, y comprueba a qué estado corresponde ahora ese mismo `1`. ¿Te avisa el compilador?
+4. Con la lista `["CONFIRMADA", "PREINSCRITA", "CONFIRMADA", "ANULADA", "CONFIRMADA"]`, cuenta cuántas matrículas hay de cada estado. Guarda el recuento en un `Record<Estado, number>`.
 
-> 💡 **Pistas**
-> - En un `enum` numérico, `EstadoV1[1]` devuelve el **nombre** que corresponde al número 1.
-> - Sacar el tipo del objeto `as const` es la parte más rara del ejercicio. Se hace así:
->   `type EstadoConst = (typeof ESTADOS)[keyof typeof ESTADOS];`
+> 💡 **Pista:** en un `enum` numérico, `EstadoV1[1]` devuelve el **nombre** que corresponde al número 1.
 
 **Salida esperada**
 
@@ -2482,8 +2451,6 @@ Una matrícula puede estar preinscrita, confirmada o anulada. Vas a representar 
 enum -> CONFIRMADA: Matrícula en vigor
 enum, todos los valores -> [ 'PREINSCRITA', 'CONFIRMADA', 'ANULADA' ]
 unión -> PREINSCRITA
-as const -> ANULADA
-as const, todos los valores -> [ 'PREINSCRITA', 'CONFIRMADA', 'ANULADA' ]
 V1: el 1 es Confirmada
 V2: el mismo 1 ahora es Preinscrita ❌
 Recuento -> { PREINSCRITA: 1, CONFIRMADA: 3, ANULADA: 1 }
@@ -2491,21 +2458,20 @@ Recuento -> { PREINSCRITA: 1, CONFIRMADA: 3, ANULADA: 1 }
 
 ---
 
-### Ejercicio 12 — Contratos con interfaces
-*Capítulo 10* · **Practicarás:** `interface`, herencia con `extends`, métodos en interfaces, *index signatures* y *declaration merging*.
+### Ejercicio 11 — Contratos con interfaces
+*Capítulo 10* · **Practicarás:** `interface`, herencia con `extends`, propiedades de tipo función y *declaration merging*.
 
 **Pasos**
 
 1. Define la interfaz `Persona` con `id` (que no se pueda cambiar: `readonly`), `nombre` y `email`, que es opcional.
 2. Amplíala con `extends`: `Alumno` añade `expediente` y `ciclo`; `Docente` añade `departamento`. Después amplía `Docente` para crear `Tutor`, que añade `grupo`. Son tres niveles: `Persona` → `Docente` → `Tutor`.
 3. Crea una alumna (Ana Serrano, expediente 1001, DAM) y un tutor (Carlos Mendoza, departamento de Informática, grupo DAM2), y muéstralos.
-4. Define la interfaz `Calculadora` con un método `media(notas)` y una propiedad `aprobado` que sea una función. Crea un objeto que la cumpla **sin volver a escribir los tipos** de los parámetros: TypeScript los deduce de la interfaz. Prueba `media([7, 8, 9])` y `aprobado(4.5)`.
-5. Define `NotasPorModulo` con un *index signature*, es decir, con claves de texto que no se conocen de antemano y valores numéricos. Guarda estas notas: Programación 8.5, Bases de Datos 7 y Entornos de Desarrollo 9. Muestra la de Programación y después recórrelas todas con `for...in`.
-6. Declara **dos veces** una interfaz `Matricula`: una con `curso` y otra con `confirmada`. Comprueba que TypeScript las une en una sola y que un objeto de ese tipo necesita las dos propiedades.
+4. Define la interfaz `Calculadora` con una sola propiedad, `media`, cuyo tipo es una función: recibe un array de notas (`number[]`) y devuelve un número. Después crea un objeto `calculadora` de tipo `Calculadora` y dale a `media` una *arrow function* que calcule la media de las notas. En esa *arrow function* **no escribas el tipo del parámetro**: pon `(notas) =>` y no `(notas: number[]) =>`, porque TypeScript ya lo conoce por la interfaz. Muestra la media de `[7, 8, 9]` con dos decimales.
+5. Declara **dos veces** una interfaz `Matricula`: una con `curso` y otra con `confirmada`. Comprueba que TypeScript las une en una sola y que un objeto de ese tipo necesita las dos propiedades.
 
 > 💡 **Pistas**
-> - En el paso 5, en este proyecto (y en Angular) hay que leer las notas con corchetes, `notas["Programación"]`, y no con punto. Se explica en [Sobre la configuración](#sobre-la-configuración).
-> - En el paso 6 usa un nombre nuevo, como `Matricula`, y no `Alumno`: la fusión afecta a todo el fichero y rompería el objeto que ya creaste en el paso 3.
+> - En el paso 4, una propiedad de tipo función se escribe con la sintaxis de flecha: `nombre: (parametro: Tipo) => TipoQueDevuelve;`. En la interfaz el parámetro **sí** lleva su tipo; si lo quitas, el compilador da el error `Parameter 'notas' implicitly has an 'any' type`.
+> - En el paso 5 usa un nombre nuevo, como `Matricula`, y no `Alumno`: la fusión afecta a todo el fichero y rompería el objeto que ya creaste en el paso 3.
 
 **Salida esperada**
 
@@ -2513,36 +2479,42 @@ Recuento -> { PREINSCRITA: 1, CONFIRMADA: 3, ANULADA: 1 }
 Alumna: Ana Serrano (DAM), expediente 1001
 Tutor:  Carlos Mendoza, Informática, grupo DAM2
 Media -> 8.00
-¿4.5 aprueba? -> false
-Programación -> 8.5
-  Programación: 8.5
-  Bases de Datos: 7
-  Entornos de Desarrollo: 9
 Matrícula 2024/25 confirmada: true
 ```
 
 ---
 
-### Ejercicio 13 — El expediente como clase
-*Capítulo 11* · **Practicarás:** clases, `private` y `readonly`, el atajo del constructor, miembros `static` y *getters*.
+### Ejercicio 12 — El expediente como clase
+*Capítulo 11* · **Practicarás:** clases, `private` y `readonly`, el atajo del constructor, propiedades y métodos `static` y *getters*.
 
-El expediente de un alumno guarda sus notas. Nadie debería poder meter un 15 ni tocar las notas desde fuera de la clase.
+El expediente de un alumno guarda sus notas. Vas a escribir una clase que las proteja: nadie podrá meter una nota fuera de rango ni modificar las notas desde fuera de la clase.
 
 **Pasos**
 
-1. Crea la clase `Expediente` con un `numero` (público y `readonly`), un `nombre` (público) y un array de `notas` **privado**. Declara las tres propiedades directamente en los parámetros del constructor, con el atajo que viste en el capítulo 11.
-2. Añade un contador `static` de expedientes creados y un método `static registrar(nombre)` que cree un expediente con número automático: 1001, 1002, 1003… Añade también un *getter* estático, `total`, para consultar cuántos se han creado.
-3. Añade `anadirNota(nota)`, que será la **única** forma de añadir notas. Si la nota no está entre 0 y 10, debe lanzar un error: `throw new Error(...)`.
+1. Crea la clase `Expediente` y declara sus tres propiedades directamente en los parámetros del constructor, con el atajo que viste en el capítulo 11:
+   - `numero`: un número público y de solo lectura (`readonly`).
+   - `nombre`: un texto público.
+   - `notas`: un array de números **privado**, con valor por defecto `[]`, para que un expediente nuevo empiece sin notas.
+2. Numera los expedientes automáticamente con propiedades y métodos `static`, que pertenecen a la clase y no a cada expediente:
+   - un contador privado, `creados`, que empieza en 0;
+   - un método `registrar(nombre)`, que suma 1 al contador y crea y devuelve un expediente con el número `1000 + creados` (el primero será el 1001, el segundo el 1002…);
+   - un *getter* `total`, que devuelve el valor del contador.
+3. Añade el método `anadirNota(nota)`, que será la **única** forma de añadir notas. Si la nota es menor que 0 o mayor que 10, debe lanzar un error con el mensaje `Nota fuera de rango: ` seguido de la nota. Si es válida, la guarda.
 4. Añade tres *getters*:
-   - `media`: la media de sus notas, o 0 si no tiene ninguna.
-   - `calificacion`: Sobresaliente (9 o más), Notable (7 o más), Suficiente (5 o más) o Insuficiente.
-   - `historial`: las notas, pero devolviendo una **copia** del array, no el original.
-5. Registra a Ana Serrano con las notas 8, 9.5 y 7, y a Luis Gil con un 4. Muestra sus datos y cuántos expedientes se han creado.
-6. Comprueba las dos protecciones:
-   - Intenta añadirle un 15 a Ana y captura el error con `try/catch`.
-   - Coge el `historial` de Ana, añádele un 10 y comprueba que el expediente real sigue teniendo 3 notas.
+   - `media`: la media de las notas, o `0` si no tiene ninguna.
+   - `calificacion`: `Sobresaliente` (media de 9 o más), `Notable` (7 o más), `Suficiente` (5 o más) o `Insuficiente`.
+   - `historial`: una **copia** del array de notas, no el original.
+5. Registra a Ana Serrano y añádele las notas 8, 9.5 y 7. Después registra a Luis Gil y añádele un 4. Muestra sus datos como en la salida esperada, con la media con dos decimales, y cuántos expedientes se han creado.
+6. Comprueba que las protecciones funcionan:
+   - Intenta añadirle un 15 a Ana. Captura el error con `try/catch` y muestra su mensaje.
+   - Guarda en una variable el `historial` de Ana, añádele un 10 y comprueba que el expediente sigue teniendo 3 notas.
+   - Escribe dos líneas que el compilador debe rechazar, `ana.notas.push(15);` y `ana.numero = 9999;`, y déjalas comentadas indicando el error que da cada una.
 
-> 💡 **Pista:** los *getters* se usan sin paréntesis, como si fueran propiedades: `ana.media`, no `ana.media()`.
+> 💡 **Pistas**
+> - Los *getters* se usan sin paréntesis, como si fueran propiedades: `ana.media`, no `ana.media()`.
+> - Un *getter* estático lleva `static` delante de `get`: `static get total()`. Se usa con el nombre de la clase: `Expediente.total`.
+> - En el `catch`, el error es de tipo `unknown`, así que no puedes leer `error.message` directamente: el compilador da `'error' is of type 'unknown'`. Compruébalo antes con `if (error instanceof Error)`.
+> - Para mostrar las notas separadas por comas: `ana.historial.join(", ")`.
 
 **Salida esperada**
 
@@ -2558,7 +2530,7 @@ Historial real tras tocar la copia: 3 notas
 
 ---
 
-### Ejercicio 14 — Jerarquía del personal
+### Ejercicio 13 — Jerarquía del personal
 *Capítulo 11* · **Practicarás:** clases abstractas, herencia, `override`, `super` y polimorfismo.
 
 En el centro hay alumnos, docentes y tutores. Todos se presentan de la misma forma, pero cada uno calcula sus horas semanales a su manera.
@@ -3523,7 +3495,7 @@ En el día a día **no vas a escribir decoradores**, pero sí a usarlos continua
 
 ---
 
-### Ejercicio 15 — Un repositorio para cualquier entidad
+### Ejercicio 14 — Un repositorio para cualquier entidad
 *Capítulo 12* · **Practicarás:** genéricos, restricciones con `extends` y `keyof`.
 
 Una aplicación tiene muchos tipos de datos (alumnos, módulos, profesores…) y todos necesitan lo mismo: guardarlos, buscarlos y borrarlos. En vez de escribir una clase para cada uno, escribirás **una sola** que sirva para todos.
@@ -3564,7 +3536,7 @@ Horas   -> [ 256, 192 ]
 
 ---
 
-### Ejercicio 16 — Un modelo, muchas vistas
+### Ejercicio 15 — Un modelo, muchas vistas
 *Capítulo 13* · **Practicarás:** los *utility types* `Omit`, `Pick`, `Partial`, `Record` y `ReturnType`.
 
 Un mismo alumno se usa de formas distintas: al darlo de alta todavía no tiene `id`, al enviarlo al navegador no debe llevar la contraseña, y en un listado solo hacen falta dos campos. En vez de escribir una interfaz para cada caso, las **sacarás todas** de una sola.
@@ -3623,13 +3595,13 @@ Formulario -> { id: 1, ciclo: 'ASIR' }
 
 ---
 
-### Ejercicio 17 — Repartir el código en módulos
+### Ejercicio 16 — Repartir el código en módulos
 *Capítulo 14* · **Practicarás:** `import` y `export`, `import type`, *barrel files* y la organización de carpetas de un proyecto Angular.
 
 Hasta ahora cada ejercicio cabía en un fichero. En Angular, el código se reparte en carpetas según lo que hace cada parte. **Este ejercicio tiene varios ficheros**. Crea esta estructura:
 
 ```
-ejercicio-17/
+ejercicio-16/
   index.ts                     ← el programa principal: usa todo lo demás
   modelos/alumno.model.ts      ← tipos y constantes
   servicios/alumno.service.ts  ← la lógica
@@ -3652,7 +3624,7 @@ ejercicio-17/
 Para ejecutarlo, indica el fichero `index.ts`:
 
 ```bash
-npm run play -- src/ejercicios/soluciones/ejercicio-17/index.ts
+npm run play -- src/ejercicios/soluciones/ejercicio-16/index.ts
 ```
 
 **Salida esperada**
@@ -3672,7 +3644,7 @@ Tras intentar colar un alumno: el servicio sigue con 3
 
 ---
 
-### Ejercicio 18 — Cargar las notas del servidor
+### Ejercicio 17 — Cargar las notas del servidor
 *Capítulo 15* · **Practicarás:** promesas, `async` / `await`, errores con `try` / `catch`, peticiones en paralelo y `fetch`.
 
 Las peticiones a un servidor tardan, y a veces fallan. Como no tienes un servidor propio, lo simularás con una función que tarda un poco en responder.
@@ -3714,7 +3686,7 @@ API -> post 1: sunt aut facere repellat provi…
 
 ---
 
-### Ejercicio 19 — Decoradores académicos
+### Ejercicio 18 — Decoradores académicos
 *Capítulo 16* · **Practicarás:** decoradores de clase, de método, de propiedad y de parámetro, como los que usa Angular (`@Component`, `@Input`…).
 
 Un decorador es una función que se «engancha» con `@` a una clase o a una de sus partes y le añade comportamiento sin cambiar su código.
@@ -3950,7 +3922,7 @@ En la vista **Ejecutar y depurar** (`Ctrl+Mayús+D`) hay un desplegable arriba c
 | **TS: elegir capítulo y depurar** | Muestra una lista con los 16 capítulos. Cómodo en clase, y no depende de qué fichero esté abierto |
 | **JS: depurar el transpilado de build/** | Compila con `npm run build` y depura el **JavaScript generado**. Sirve para comprobar que los breakpoints del `.ts` siguen funcionando sobre el `.js` gracias a los *source maps* |
 
-> **Limitación de la tercera**: no funciona con el capítulo `14-modulos` ni con el `ejercicio-17`.
+> **Limitación de la tercera**: no funciona con el capítulo `14-modulos` ni con el `ejercicio-16`.
 > El `tsconfig.json` usa `"moduleResolution": "bundler"` (como Angular), que permite escribir
 > `import { x } from "./y"` sin extensión. Node exige la extensión `.js` al ejecutar módulos ESM,
 > así que el `build/` de esos dos falla con `ERR_MODULE_NOT_FOUND`.
