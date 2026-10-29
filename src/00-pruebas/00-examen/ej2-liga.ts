@@ -23,3 +23,4 @@ clasificacion.forEach(equipo => {
 
 // Mostramos el primer equipo del array original y el primer ordenado con el formato exacto
 console.log(`1er equipo del array original: ${equipos[0].nombre}`);
+console.log(`1er equipo ordenado: ${clasificacion[0].nombre}`);
