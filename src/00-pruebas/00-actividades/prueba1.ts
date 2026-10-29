@@ -5,4 +5,3 @@ const p12: Persona1 = {
     edad:18,
 }
 console.log(`Datos ${p12.nombre} ${p12.apellidos} ${p12.edad}`);
-
