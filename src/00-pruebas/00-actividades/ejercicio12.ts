@@ -19,6 +19,8 @@ class Expendiente {
         }
     }
     get media():number {
+        //Para decimal: Number((this.notas.reduce
+        //((previa,act)=>previa+=act, 0)/this.notas.length).toFixed(2));
         return this.notas.reduce((previa,act)=>{return previa+=act;})/this.notas.length;
     }
     get Calificacion():string {
@@ -31,11 +33,34 @@ class Expendiente {
             nota="Notable"
         }else if(this.media>=9){
             nota="Sobresaliente"
-        }
+        }return nota;
     }
     get historial() {
         return [...this.notas]
     }
 }
-console.log(Expendiente.registrar("Ana Serrano"))
-let a21 = Expendiente.registrar("Pablo")
+//Muestro tanto expediente como nombre, notas y media
+let e11 = Expendiente.registrar("Ana Serrano");
+e11.anadirNota(8);e11.anadirNota(9.5);e11.anadirNota(7);
+console.log(`Expediente ${e11.numero}- ${e11.nombre}`);
+console.log(`Notas ${e11.historial}`);
+console.log(e11.media);
+
+//Mostramos datos de Luis
+let e12 = Expendiente.registrar("Luis Gil");
+e12.anadirNota(4);
+console.log(`Expediente ${e12.numero}-${e12.nombre}: ${e12.Calificacion}`);
+
+//Expendientes creados
+console.log(`Expendiente creados: ${Expendiente.length}`);
+
+//Mostramos nota de mas en Ana 15
+try {
+    e11.anadirNota(15);
+} catch (error: any) {
+    console.log("El resultado es:", error.message);
+}
+const historialAna = e11.historial;
+historialAna.push(10); // Modificamos la copia obtenida del getter
+console.log(`Historial real tras tocar la copia: ${e11.historial.length}`);
+
