@@ -1,6 +1,6 @@
 import { log } from "console"; //Esto lo pone manualmente al poner dev
 
-//Definimos los tipos de cada uno
+/*Definimos los tipos de cada uno
 type Direccion = {calle:string, numero:number}
 type Personaa = {nombree:string, apellidoss:string,direccion:Direccion}
 let per1 = {nombree:"Pablo", apellidoss:"SG", direccion:{calle:"A",numero:1}}
@@ -31,7 +31,7 @@ class Coche {marca:string;modelo:string;kilometros:number;color:string="Rojo";
     /*Lo que realiza es hacer tanto la definicion de atributos como constructor
     constructor(public marca:string,public modelo:string,public km:number,
     public color:string{}*/
-    conducir() {
+    /*conducir() {
         this.kilometros++;
     }
 
