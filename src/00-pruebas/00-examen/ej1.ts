@@ -1,4 +1,4 @@
-interface Facturable { calcularImporte(): number, ficha(): string };
+/*interface Facturable { calcularImporte(): number, ficha(): string };
 type EstadoReparacion = "recibida"|"en_reparacion"|"terminada"|"entregada";
 abstract class Reparacion {
     public estado:EstadoReparacion = "recibida";
@@ -73,4 +73,4 @@ public class static GestionTaller extends  {
 }
 
 let p1: Reparacion = [1, "Ana", "iPhone 13", "recibida", 95];
-console.log(p1.id)
+console.log(p1.id)*/
