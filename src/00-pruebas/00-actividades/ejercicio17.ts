@@ -15,7 +15,15 @@ async function obtenerTareas(usuario: number): Promise<Tarea1[]> {
     return tareas
     }
 }
-obtenerTareas(1) ({
-.then((tareas) => console.log(`Usuario 1: ${tareas.length} tareas`))
-});
+obtenerTareas(1)
+  .then((tareas) => {
+    const total = tareas.length;
+    const completadas = tareas.filter((t) => t.completed).length;
+    const pendientes = total - completadas;
+    const porcentaje = ((completadas / total) * 100).toFixed(1);
+
+    console.log(`Usuario 1: ${total} tareas`);
+    console.log(`Completadas: ${completadas} (${porcentaje} %)`);
+    console.log(`Pendientes: ${pendientes}`);
+  })
 //.then((tareas) => console.log(tareas))
