@@ -14,4 +14,5 @@ async function obtenerTareas1(usuario: number): Promise<Tarea1[]> {
     return tareas
     }
 }
-obtenerTareas(1)
+obtenerTareas1(1)
+.then((tareas) => console.log(tareas))

@@ -1,22 +1,21 @@
+export{}
 interface TareaApi {userId:string,id:number,title:string,completed:boolean}
-interface Tarea {id:number,titulo:string,completada:boolean}
+interface Tarea {id:number,title:string,completed:boolean}
 
-async function obtenerTareas(usuario: number): Promise<Tarea[]> {
+async function obtenerTareas(usuario: number): Promise<Tarea1[]> {
     const URL_POST = `https://jsonplaceholder.typicode.com/todos?userId=${usuario}`;
     const respuesta:Response = await fetch(URL_POST);
-    if (!respuesta.ok) {
+    if (respuesta.status != 200) {
         throw new Error(`Error HTTP ${respuesta.status}`);
     }else {
-    const datos = (await respuesta.json() as TareaApi) as TareaApi
-    const tarea: Tarea = {
-        id: datos.id,
-        titulo: datos.title,
-        completada: datos.completed,
-    };
-    console.log(tarea);
-    return (await respuesta.json()) as Tarea[];
+    const datos1:TareaApi1[] = await (respuesta.json() as Promise<TareaApi1[]>)
+    const tareas = datos1.map((t:TareaApi1)=>{return {
+    id:t.id,title:t.title,completed:t.completed}})
+    
+    return tareas
     }
 }
-obtenerTareas(1)
-/*const datos = await Promise.all([obtenerTareas(1),obtenerTareas(2)]);
-datos.forEach((p) => console.log(`fetch paralelo -> [${p.id} ${p.title}]`));*/
+obtenerTareas(1) ({
+.then((tareas) => console.log(`Usuario 1: ${tareas.length} tareas`))
+});
+//.then((tareas) => console.log(tareas))
