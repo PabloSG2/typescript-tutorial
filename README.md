@@ -3104,21 +3104,49 @@ export class UsuarioComponent { }                        // exportación con nom
 
 > ▶️ `npm run play -- src/15-async/demo.ts`
 
-JavaScript ejecuta **una sola cosa a la vez**. Las operaciones que tardan (una petición de red, leer un fichero, un temporizador) no bloquean el programa: se lanzan y su resultado llega *después*.
+JavaScript ejecuta **una sola cosa a la vez**. Si una operación lenta, como una petición de red, detuviera el programa hasta terminar, la aplicación se quedaría bloqueada. Por eso estas operaciones son **asíncronas**: se lanzan, el programa sigue con la línea siguiente y el resultado llega más tarde.
+
+> Los ejemplos con `fetch` hacen peticiones reales a `jsonplaceholder.typicode.com`, una API
+> pública de pruebas. Sin conexión a internet, la demo se detiene con el error `fetch failed`.
+
+## Qué pasa si no esperas el resultado
+
+`fetch` pide datos a un servidor. Probemos a usarlo como si fuera una función normal, que da el resultado en la misma línea:
 
 ```ts
-console.log("1. Empieza el programa");
+const URL_POST = "https://jsonplaceholder.typicode.com/posts/1";
 
-setTimeout(() => console.log("3. Esto llega después (asíncrono)"), 0);
-
-console.log("2. Esto se ejecuta antes que el setTimeout");
+console.log("1. Pido el post");
+const peticion = fetch(URL_POST);
+console.log("2. Esto es lo que tengo:", peticion);
 ```
 
-Ejecuta la demo y verás los números en orden 1, 2, 3 aunque el `setTimeout` esté escrito en medio y con un retardo de 0 ms. Todo lo asíncrono se aparta y se retoma cuando el hilo principal queda libre.
+Salida:
+
+```
+1. Pido el post
+2. Esto es lo que tengo: Promise { <pending> }
+```
+
+El programa no ha esperado al servidor: ha lanzado la petición y ha seguido con la línea siguiente. Por eso `peticion` no contiene los datos, sino una **promesa** pendiente (`<pending>`). Si intentas leer la respuesta, TypeScript te avisa:
+
+```ts
+// console.log(peticion.ok);   // Error: Property 'ok' does not exist on type 'Promise<Response>'.
+```
+
+`fetch` no tiene una versión síncrona: siempre devuelve una promesa. Lo que puedes decidir es cómo recoger su resultado, y es lo que veremos en el resto del capítulo.
 
 ## `Promise<T>`
 
-Una promesa representa un valor que **todavía no está disponible**. Es genérica: `T` es el tipo que resolverá. Tiene tres estados: *pendiente* → *cumplida* (`resolve`) o *rechazada* (`reject`).
+Una promesa es un objeto que representa un resultado que todavía no está disponible. `Promise<string>` significa: *cuando termine, dará un `string`*. Siempre está en uno de estos tres estados:
+
+| Estado | Significado |
+|---|---|
+| Pendiente | La operación todavía no ha terminado |
+| Cumplida | Ha terminado bien y tiene un valor (`resolve`) |
+| Rechazada | Ha fallado y tiene un error (`reject`) |
+
+Normalmente no crearás promesas a mano: te las devuelven funciones como `fetch`. Aquí creamos una para simular una operación lenta sin depender de internet, y la usaremos en el resto del capítulo:
 
 ```ts
 // Promise<T>: es genérico. T es el tipo del valor que resolverá.
@@ -3133,9 +3161,7 @@ function esperar(ms: number): Promise<string> {
 }
 ```
 
-Esta función `esperar` se usa en el resto del capítulo para simular una operación lenta.
-
-## Consumirla con `.then()`
+## Recoger el resultado con `.then()`
 
 ```ts
 esperar(100)
@@ -3145,12 +3171,98 @@ esperar(100)
 ```
 
 - `.then()` recibe el valor si la promesa se cumple.
-- `.catch()` recoge el error si se rechaza.
-- `.finally()` se ejecuta siempre.
+- `.catch()` recibe el error si se rechaza.
+- `.finally()` se ejecuta en los dos casos.
 
-## Consumirla con `async`/`await`
+## Funciones asíncronas: `async` y `await`
 
-Es la misma promesa escrita como si fuese código secuencial. `async` hace que la función devuelva **siempre** una `Promise`; `await` pausa hasta que la promesa resuelva.
+Es la otra forma de recoger el resultado, y la más habitual porque se lee de arriba abajo. Usa dos palabras:
+
+- **`async`**, delante de `function`, declara una función asíncrona.
+- **`await`**, delante de una promesa, espera a que termine y entrega su valor: `await fetch(URL_POST)` da la respuesta del servidor (`Response`), no una `Promise<Response>`.
+
+Vamos a pedir un usuario a la misma API, pero esta vez esperando el resultado. La API devuelve sus datos en inglés y con la ciudad dentro de otro objeto, y en nuestra aplicación queremos trabajar con una estructura más sencilla. Por eso definimos dos interfaces y **mapeamos** los datos, es decir, creamos un objeto de nuestra interfaz a partir de lo que llega:
+
+```ts
+// Lo que devuelve la API (solo los campos que nos interesan)
+interface UsuarioApi {
+  id: number;
+  name: string;
+  email: string;
+  address: { city: string };
+}
+
+// Cómo queremos trabajar con esos datos en nuestra aplicación
+interface Usuario {
+  id: number;
+  nombre: string;
+  email: string;
+  ciudad: string;
+}
+
+async function mostrarUsuario(id: number): Promise<void> {
+  console.log("Pido el usuario");
+  const respuesta = await fetch(`https://jsonplaceholder.typicode.com/users/${id}`); // la función se detiene aquí
+  const datos = (await respuesta.json()) as UsuarioApi; // leer el cuerpo también es asíncrono
+
+  // Mapeo: creamos un objeto con nuestra interfaz a partir de los datos de la API
+  const usuario: Usuario = {
+    id: datos.id,
+    nombre: datos.name,
+    email: datos.email,
+    ciudad: datos.address.city,
+  };
+
+  console.log(usuario);
+}
+
+mostrarUsuario(1);
+console.log("Esto sale antes que el usuario");
+```
+
+Salida:
+
+```
+Pido el usuario
+Esto sale antes que el usuario
+{
+  id: 1,
+  nombre: 'Leanne Graham',
+  email: 'Sincere@april.biz',
+  ciudad: 'Gwenborough'
+}
+```
+
+Aquí hay tres cosas importantes:
+
+- **Ahora sí tenemos los datos**, porque cada `await` espera a que termine su promesa.
+- **`await` detiene solo la función en la que está**, no el programa. Mientras `mostrarUsuario` espera al servidor, el código que la llamó sigue ejecutándose. Por eso el segundo mensaje sale antes que el usuario.
+- **`as UsuarioApi` no convierte nada**: solo le dice al compilador qué forma esperar. El mapeo es lo que crea el objeto `Usuario`, y si la API cambiara algún nombre, solo habría que tocar este punto de la aplicación.
+
+### Lo que devuelve una función `async`
+
+Una función `async` devuelve **siempre** una promesa, aunque su `return` tenga un valor normal. Por eso su tipo de retorno es `Promise<T>`, y quien la llama necesita `await` para obtener el valor:
+
+```ts
+async function doble(n: number): Promise<number> {
+  return n * 2; // el return da un number; la función devuelve Promise<number>
+}
+
+const resultado = await doble(4);
+console.log(resultado); // 8
+```
+
+Si la función no devuelve nada, su tipo es `Promise<void>`. Estos son los errores que verás más a menudo:
+
+| Código | Error | Mensaje del compilador |
+|---|---|---|
+| `TS1308` | Usar `await` en una función sin `async` | `'await' expressions are only allowed within async functions...` |
+| `TS1064` | Escribir `number` como tipo de retorno de una función `async` | `The return type of an async function or method must be the global Promise<T> type...` |
+| `TS2322` | Olvidar el `await` al llamarla: `const m: string = f();` | `Type 'Promise<string>' is not assignable to type 'string'` |
+
+### Gestionar los errores con `try/catch`
+
+Si la promesa se rechaza, `await` lanza el error en esa línea. Se captura con un `try/catch` normal:
 
 ```ts
 // `async` hace que la función devuelva SIEMPRE una Promise.
@@ -3169,14 +3281,11 @@ async function conAwait(): Promise<void> {
 }
 ```
 
-Dos detalles importantes:
-
-- Los errores se capturan con un `try/catch` normal, no con `.catch()`.
-- En TypeScript, **lo que se captura en un `catch` es de tipo `unknown`**. Hay que comprobar con `instanceof Error` antes de leer `.message`. Es el mismo *narrowing* del capítulo 02.
+En TypeScript, **lo que se captura en un `catch` es de tipo `unknown`**, porque en JavaScript se puede lanzar cualquier valor. Por eso hay que comprobar con `instanceof Error`, que viste en el capítulo 11, antes de leer `.message`.
 
 ## Secuencial frente a paralelo
 
-Este es el error de rendimiento más común:
+Dos `await` seguidos se ejecutan uno detrás de otro: el segundo no empieza hasta que termina el primero.
 
 ```ts
 async function secuencial(): Promise<void> {
@@ -3187,6 +3296,8 @@ async function secuencial(): Promise<void> {
 }
 ```
 
+Si las operaciones no dependen una de otra, se pueden lanzar a la vez con `Promise.all`, que espera a que terminen todas y devuelve sus resultados en el mismo orden:
+
 ```ts
 async function paralelo(): Promise<void> {
   const inicio = Date.now();
@@ -3196,9 +3307,9 @@ async function paralelo(): Promise<void> {
 }
 ```
 
-La demo imprime los tiempos reales: la versión secuencial tarda unos 300 ms y la paralela unos 150. Si dos operaciones no dependen una de otra, **no las encadenes con `await`**.
+La demo imprime los tiempos reales: la versión secuencial tarda unos 300 ms y la paralela unos 150.
 
-`Promise.all` falla entera si falla una. Si quieres el resultado de todas pase lo que pase:
+Si falla una sola promesa, `Promise.all` falla entera. Para obtener el resultado de cada una aunque alguna falle, se usa `Promise.allSettled`:
 
 ```ts
 // Promise.allSettled: no falla aunque alguna rechace.
@@ -3214,12 +3325,12 @@ async function todasConResultado(): Promise<void> {
 |---|---|
 | `Promise.all` | Espera a todas. Si **una** falla, falla todo |
 | `Promise.allSettled` | Espera a todas y devuelve el estado de cada una. Nunca falla |
-| `Promise.race` | Devuelve la primera que termine, resuelva o rechace |
-| `Promise.any` | Devuelve la primera que **resuelva** correctamente |
+| `Promise.race` | Devuelve la primera que termine, se cumpla o se rechace |
+| `Promise.any` | Devuelve la primera que se **cumpla** |
 
 ## `fetch` tipado
 
-Así se consume una API REST. Primero se describe con una `interface` qué forma tienen los datos:
+`mostrarUsuario` da por hecho que la petición ha ido bien y solo muestra el resultado. Lo habitual es escribir una función que compruebe la respuesta y **devuelva** los datos tipados, para usarlos donde hagan falta:
 
 ```ts
 // Así se consume una API REST. En Angular será this.http.get<T>(url).
@@ -3238,30 +3349,26 @@ async function obtenerPost(id: number): Promise<Post> {
     throw new Error(`Error HTTP ${respuesta.status}`);
   }
 
-  // `.json()` devuelve Promise<any>: el genérico le pone tipo.
+  // `.json()` no conoce la forma de los datos: `as Post` indica el tipo, pero no lo comprueba.
   return (await respuesta.json()) as Post;
 }
 ```
 
-Dos trampas habituales:
+Hay dos trampas habituales:
 
 1. **`fetch` solo rechaza la promesa si hay un fallo de red.** Un 404 o un 500 son respuestas válidas para él, así que hay que mirar `respuesta.ok` a mano.
-2. **`.json()` devuelve `any`.** La aserción `as Post` es una promesa tuya al compilador, no una validación: si la API devuelve otra cosa, nadie te avisará.
+2. **`.json()` no conoce la forma de los datos.** En este proyecto devuelve `Promise<unknown>` y en Angular, con los tipos del navegador, `Promise<any>`. `as Post` le dice al compilador qué tipo esperar, pero no comprueba nada: si la API devuelve otra cosa, nadie te avisará.
 
-Varias peticiones a la vez, combinando lo anterior:
+Para hacer varias peticiones a la vez, se combina con `Promise.all`:
 
 ```ts
-    // Varias peticiones en paralelo
-    const posts = await Promise.all([obtenerPost(2), obtenerPost(3)]);
-    posts.forEach((p) => console.log(`fetch paralelo -> [${p.id}] ${p.title}`));
+const posts = await Promise.all([obtenerPost(2), obtenerPost(3)]);
+posts.forEach((p) => console.log(`fetch paralelo -> [${p.id}] ${p.title}`));
 ```
 
-> La demo hace peticiones reales a `jsonplaceholder.typicode.com`. Sin conexión a
-> internet, esa última parte fallará; el resto del fichero funciona igual.
+## `await` fuera de una función
 
-## Top-level await
-
-Al final de la demo verás llamadas con `await` fuera de cualquier función:
+Al final de la demo verás llamadas con `await` fuera de cualquier función. Se llama *top-level await*:
 
 ```ts
 // await de nivel superior (top-level await): permitido en módulos ESM.
@@ -3270,7 +3377,7 @@ await secuencial();
 await paralelo();
 ```
 
-Solo está permitido en módulos ESM, que es lo que usa este proyecto. Si el fichero no tuviera ningún `import`/`export`, TypeScript daría error: por eso la demo termina con `export {};`.
+Solo está permitido en módulos, es decir, en ficheros con algún `import` o `export`. Sin ninguno, TypeScript da el error `TS1375`, y por eso la demo termina con `export {};`.
 
 ## Y en Angular: Observables
 
@@ -3644,45 +3751,54 @@ Tras intentar colar un alumno: el servicio sigue con 3
 
 ---
 
-### Ejercicio 17 — Cargar las notas del servidor
-*Capítulo 15* · **Practicarás:** promesas, `async` / `await`, errores con `try` / `catch`, peticiones en paralelo y `fetch`.
+### Ejercicio 17 — Las tareas del servidor
+*Capítulo 15* · **Practicarás:** funciones `async` con `await`, `fetch`, comprobar la respuesta, `try` / `catch`, mapear datos a una interfaz y `Promise.all`.
 
-Las peticiones a un servidor tardan, y a veces fallan. Como no tienes un servidor propio, lo simularás con una función que tarda un poco en responder.
+Esta vez vas a trabajar con datos reales. La API pública de pruebas `jsonplaceholder.typicode.com` tiene una lista de tareas de varios usuarios. Esta dirección devuelve las del usuario 1:
+
+```
+https://jsonplaceholder.typicode.com/todos?userId=1
+```
+
+Ábrela en el navegador antes de empezar: verás un array de objetos con `userId`, `id`, `title` y `completed`.
 
 **Pasos**
 
-1. Escribe `buscarAlumno(id)`, que devuelva un `Promise<Alumno>`. Pasados 120 ms debe resolver con este objeto:
-   ```ts
-   { id, nombre: `Alumno ${id}`, nota: 5 + (id % 5) }
-   ```
-   Si el `id` es 0 o negativo, en vez de eso debe rechazar con un error.
-2. Con `async` / `await`, busca el alumno 3 y muéstralo. Después busca el `-1` y captura el error con `try` / `catch`.
-3. Mide cuánto tardan tres peticiones (ids 1, 2 y 3) hechas **una detrás de otra**, cada una con su `await`. Mide después cuánto tardan las mismas tres lanzadas **a la vez** con `Promise.all`. Muestra también la media de las tres notas.
-4. Usa `Promise.allSettled` con los ids 1, -5 y 2. La segunda fallará, pero el programa no debe detenerse: muestra el resultado de cada una.
-5. Termina con una petición real con `fetch` a `https://jsonplaceholder.typicode.com/posts/1`. Muestra el `id` y los 30 primeros caracteres del `title`.
+1. Define dos interfaces:
+   - `TareaApi`, con los cuatro campos tal como llegan de la API.
+   - `Tarea`, con los datos tal como los usarás en tu programa: `id`, `titulo` (texto) y `completada` (booleano).
+2. Escribe la función asíncrona `obtenerTareas(usuario)`, que devuelva un `Promise<Tarea[]>`:
+   - Pide con `fetch` las tareas de ese usuario.
+   - Si la respuesta no es correcta, lanza un error con el mensaje `Error HTTP ` seguido del código de estado.
+   - Lee los datos con `.json()` y **mapea** cada `TareaApi` a una `Tarea`.
+3. Obtén las tareas del usuario 1 y muestra cuántas hay, cuántas están completadas (con el porcentaje, con un decimal) y cuántas pendientes.
+4. Muestra los títulos de las **tres primeras** tareas pendientes.
+5. Muestra el título más largo usando `reduce`.
+6. Pide **a la vez**, con `Promise.all`, las tareas de los usuarios 1 y 2, y muestra cuántas ha completado cada uno.
+
+Escribe los pasos 3 a 6 dentro de un `try`/`catch`. Si la petición falla, debe mostrarse `No se pudieron cargar las tareas: ` seguido del mensaje del error.
 
 > 💡 **Pistas**
-> - Para el retraso del paso 1, usa `setTimeout` dentro de `new Promise((resolve, reject) => { ... })`.
+> - Usa `await` fuera de una función, directamente en el fichero, como se explica en «`await` fuera de una función». Recuerda terminar con `export {};`.
+> - `fetch` **no** lanza un error si el servidor responde con un 404 o un 500. Tienes que comprobar tú `respuesta.ok`, y el código está en `respuesta.status`.
+> - `.json()` devuelve `Promise<unknown>`. Indica el tipo con `as TareaApi[]`.
 > - En el `catch`, el error es de tipo `unknown`. Compruébalo con `error instanceof Error` antes de leer `error.message`.
-> - Para medir un tiempo, guarda `Date.now()` antes y réstalo después. Redondea a las centenas.
-> - `fetch` **no** lanza un error si el servidor responde con un 404 o un 500. Tienes que comprobar tú `respuesta.ok`.
 
 **Salida esperada**
 
 ```
-Encontrado -> Alumno 3 con 8
-Error controlado -> Id no válido: -1
-Secuencial: ~400 ms
-Paralelo:   ~100 ms
-Media de los 3 -> 7.00
-allSettled:
-  [0] OK -> Alumno 1
-  [1] KO -> Id no válido: -5
-  [2] OK -> Alumno 2
-API -> post 1: sunt aut facere repellat provi…
+Usuario 1: 20 tareas
+Completadas: 11 (55.0 %)
+Pendientes: 9
+Primeras pendientes:
+  - delectus aut autem
+  - quis ut nam facilis et officia qui
+  - fugiat veniam minus
+Título más largo: laboriosam mollitia et enim quasi adipisci quia provident illum
+Completadas -> usuario 1: 11 | usuario 2: 8
 ```
 
-> Los tiempos son aproximados y dependen de cada ordenador. Lo importante es la proporción: en paralelo debe tardar aproximadamente **un tercio** que una detrás de otra. La última línea necesita conexión a internet.
+> Necesita conexión a internet. Para comprobar que gestionas bien los errores, cambia `todos` por `tareas` en la dirección: debe mostrarse `No se pudieron cargar las tareas: Error HTTP 404`.
 
 ---
 
@@ -3902,7 +4018,7 @@ Los logpoints se marcan con un rombo rojo en vez de un círculo, y son la mejor 
 
 El capítulo 15 es donde el depurador más ayuda, porque el orden de ejecución no es el que se lee.
 
-Abre `src/15-async/demo.ts` y pon un breakpoint en la línea 38:
+Abre `src/15-async/demo.ts` y pon un breakpoint en la línea 78:
 
 ```ts
 const mensaje = await esperar(200); // pausa aquí hasta que resuelva
