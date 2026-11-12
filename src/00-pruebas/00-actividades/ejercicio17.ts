@@ -1,14 +1,13 @@
-const URL_POST = "https://jsonplaceholder.typicode.com/todos?userId=";
-
 interface TareaApi {userId:string,id:number,title:string,completed:boolean}
 interface Tarea {id:number,titulo:string,completada:boolean}
 
 async function obtenerTareas(usuario: number): Promise<Tarea[]> {
-    const respuesta = await fetch(`https://jsonplaceholder.typicode.com/users/${usuario}`);
+    const URL_POST = `https://jsonplaceholder.typicode.com/todos?userId=${usuario}`;
+    const respuesta:Response = await fetch(URL_POST);
     if (!respuesta.ok) {
         throw new Error(`Error HTTP ${respuesta.status}`);
     }else {
-    const datos = (await respuesta.json()) as TareaApi
+    const datos = (await respuesta.json() as TareaApi) as TareaApi
     const tarea: Tarea = {
         id: datos.id,
         titulo: datos.title,
