@@ -1,6 +1,6 @@
 export{}
-interface TareaApi {userId:string,id:number,title:string,completed:boolean}
-interface Tarea {id:number,title:string,completed:boolean}
+interface TareaApi1 {userId:string,id:number,title:string,completed:boolean}
+interface Tarea1 {id:number,title:string,completed:boolean}
 
 async function obtenerTareas(usuario: number): Promise<Tarea1[]> {
     const URL_POST = `https://jsonplaceholder.typicode.com/todos?userId=${usuario}`;
