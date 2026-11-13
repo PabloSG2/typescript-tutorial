@@ -15,6 +15,12 @@ async function obtenerTareas(usuario: number): Promise<Tarea1[]> {
     return tareas
     }
 }
+/*Promesas
+let promesas=Promise.all([obtenerTareas(1),obtenerTareas(2),obtenerTareas(3)])
+promesas.then((datos) =>{datos.forEach(datos => {
+  console.log(datos)
+});})*/
+
 obtenerTareas(1)
   .then((tareas) => {
     const total = tareas.length;
